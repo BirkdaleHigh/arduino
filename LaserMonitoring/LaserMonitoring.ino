@@ -15,7 +15,7 @@ This example code is in the public domain.
  http://www.arduino.cc/en/Tutorial/Tone4
 
  */
- 
+#include "pitches.h";
 #define aref_voltage 3.3;         // we tie 3.3V to ARef and measure it with a multimeter!
 
 int speaker = 5;
@@ -30,6 +30,7 @@ void setup() {
   Serial.begin(9600);
 }
 
+float lastTemp;
 void loop(){
   int reading = analogRead(sensorPin);  
   
@@ -42,36 +43,37 @@ void loop(){
   Serial.print(temperatureC); Serial.print(" degrees C");
 
   if(temperatureC < 5.0 && temperatureC > 6.0){
-    warn(temperatureC);
+    if(lastTemp != temperatureC){
+      warn(temperatureC); // only beep once on a tenth of a degree change.
+    }
   }
   if(temperatureC <= 5.0){
     alert();
   }
   if(temperatureC > 24.0 && temperatureC < 25.0){
-    warn(temperatureC);
+    if(lastTemp != temperatureC){
+      warn(temperatureC); // only beep once on a tenth of a degree change.
+    }
   }
   if(temperatureC >= 25.0){
     alert();
   }
 
+  lastTemp = temperatureC;
   Serial.println("");
-  delay(1000);
+  delay(3000);
 }
 
-float lastLevel;
 void warn(float level) {
-  if(lastLevel == level){
-    return;
-    // only beep once on a tenth of a degree change.
-  }
-  lastLevel = level;
-  Serial.print(" warn: ");Serial.print(level);
+  int range;
+  range = (int)(level * 100); //move up 2 decimal places and truncate remainding
   
-  int pitch = map(level, 24, 25, 120, 1500);
+  int pitch = map(range, 2400, 2500, NOTE_C4, NOTE_C5);
+  Serial.print(" warning pitch: ");Serial.print(pitch);
   // turn off tone function
   noTone(speaker);
   
-  tone(speaker, level, 200);
+  tone(speaker, pitch, 250);
 }
 
 void alert() {
@@ -79,6 +81,6 @@ void alert() {
   // turn off tone function for pin 6:
   noTone(speaker);
   // play a note on pin 7 for 500 ms:
-  tone(speaker, 494, 500);
-  delay(500);
+  tone(speaker, NOTE_C6, 1000);
+  delay(1000);
 }
